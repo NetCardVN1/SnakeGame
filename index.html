@@ -1,158 +1,131 @@
-        <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Snake Game</title>
+    <title>Hungry Snake</title>
     <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#000000">
     <style>
-        :root { --accent: #2ecc71; --bg: #000000; --danger: #ff4757; }
-        body { margin: 0; background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; }
+        :root { --glass: rgba(255, 255, 255, 0.2); --text: #444; }
+        body { margin: 0; background: #e0e5ec; font-family: 'Segoe UI', sans-serif; height: 100vh; display: flex; align-items: center; justify-content: center; overflow: hidden; }
         
-        /* Giao diện chuẩn ảnh mẫu 1000017657.png */
-        #home-screen, #difficulty-screen, #exit-confirm { position: fixed; inset: 0; background: black; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100; }
-        .title { font-size: 45px; font-weight: bold; margin-bottom: 5px; }
-        .subtitle { font-size: 18px; margin-bottom: 60px; color: #bbb; }
-        .menu-item { font-size: 32px; margin: 15px 0; cursor: pointer; color: white; background: none; border: none; font-family: inherit; outline: none; }
-        
-        /* Game Play */
-        #game-container { display: none; flex-direction: column; align-items: center; }
-        canvas { border: 4px solid #333; background: #000; border-radius: 8px; }
-        #game-info { width: 320px; display: flex; justify-content: space-between; padding: 10px 0; font-size: 18px; color: var(--accent); font-weight: bold; }
-        
-        /* Nút bấm điều hướng */
-        .controls { display: grid; grid-template-columns: repeat(3, 80px); gap: 15px; margin-top: 30px; }
-        .ctrl-btn { width: 80px; height: 80px; background: #1a1a1a; border: 1px solid #333; color: white; border-radius: 20px; font-size: 32px; display: flex; align-items: center; justify-content: center; user-select: none; -webkit-tap-highlight-color: transparent; }
-        .ctrl-btn:active { background: #333; transform: scale(0.9); }
-        .btn-up { grid-column: 2; }
-        .btn-left { grid-column: 1; }
-        .btn-down { grid-column: 2; }
-        .btn-right { grid-column: 3; }
+        .glass-container {
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            border-radius: 35px;
+            box-shadow: 20px 20px 60px #bec3be, -20px -20px 60px #ffffff;
+            padding: 40px; text-align: center; width: 300px; z-index: 10;
+        }
 
-        .footer { position: absolute; bottom: 30px; font-size: 14px; color: #666; width: 100%; text-align: center; }
+        .title { font-size: 36px; font-weight: 800; color: var(--text); margin: 0; }
+        .author { font-size: 14px; color: #777; margin-bottom: 40px; }
+
+        .menu-btn {
+            width: 100%; padding: 15px; margin: 12px 0; border: none; border-radius: 18px;
+            background: rgba(255, 255, 255, 0.5); color: var(--text); font-size: 18px; font-weight: 600;
+            box-shadow: 6px 6px 12px #bec3be, -6px -6px 12px #ffffff; cursor: pointer; transition: 0.2s;
+        }
+        .menu-btn:active { box-shadow: inset 4px 4px 8px #bec3be; transform: scale(0.97); }
+
+        #game-view { display: none; flex-direction: column; align-items: center; }
+        canvas { background: #000; border: 10px solid #fff; border-radius: 25px; box-shadow: 10px 10px 30px #bec3be; }
+
+        .d-pad { display: grid; grid-template-columns: repeat(3, 75px); gap: 12px; margin-top: 25px; }
+        .ctrl { width: 75px; height: 75px; background: #fff; border-radius: 20px; display: flex; align-items: center; justify-content: center; font-size: 28px; box-shadow: 4px 4px 10px #bec3be; }
+
+        .warning-text { color: #e74c3c; font-weight: bold; margin-bottom: 25px; font-size: 15px; }
         .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
-    <div id="home-screen">
-        <div class="title">Snake Game</div>
-        <div class="subtitle">Made by Gemini and Tí</div>
-        <button class="menu-item" onclick="showDifficulty()">Chơi</button>
-        <button class="menu-item" onclick="confirmExit()">Thoát</button>
-        <div class="footer">© Game thuộc quyền của Gemini và Tí</div>
+    <div id="home" class="glass-container">
+        <h1 class="title">Hungry Snake</h1>
+        <p class="author">Made by Gemini and Tí</p>
+        <button class="menu-btn" onclick="show('difficulty')">Chơi</button>
+        <button class="menu-btn" onclick="alert('Lịch sử: 0 điểm')">Lịch sử</button>
+        <button class="menu-btn" onclick="show('exit-dialog')">Thoát</button>
     </div>
 
-    <div id="exit-confirm" class="hidden">
-        <div class="title" style="font-size: 24px; color: var(--danger); text-align: center; padding: 0 20px;">Bạn có muốn thoát không?</div>
-        <button class="menu-item" onclick="window.close()">Đúng, thoát</button>
-        <button class="menu-item" style="color:var(--accent)" onclick="closeExitConfirm()">Không, chơi tiếp</button>
+    <div id="exit-dialog" class="glass-container hidden">
+        <div class="warning-text">⚠️ Cảnh báo : Bạn có muốn thoát trò chơi không?</div>
+        <button class="menu-btn" style="color:#27ae60" onclick="window.close()">✅ Đúng, tôi muốn thoát</button>
+        <button class="menu-btn" style="color:#e74c3c" onclick="show('home')">❌ Không, tôi muốn chơi tiếp</button>
     </div>
 
-    <div id="difficulty-screen" class="hidden">
-        <div class="title" style="font-size: 28px;">MỨC ĐỘ</div>
-        <button class="menu-item" onclick="startGame(160)">Dễ</button>
-        <button class="menu-item" onclick="startGame(70)">Khó</button>
-        <button class="menu-item" style="color:gray; font-size: 18px" onclick="showHome()">Quay lại</button>
+    <div id="difficulty" class="glass-container hidden">
+        <h2 style="color:var(--text)">MỨC ĐỘ</h2>
+        <button class="menu-btn" onclick="play(140)">Dễ</button>
+        <button class="menu-btn" onclick="play(70)">Khó</button>
+        <button class="menu-btn" onclick="show('home')">Quay lại</button>
     </div>
 
-    <div id="game-container">
-        <div id="game-info">
-            <span id="score-val">Điểm: 0</span>
-            <span>Mồi: 🍎</span>
-        </div>
-        <canvas id="gameCanvas" width="320" height="320"></canvas>
-        <div class="controls">
-            <div class="ctrl-btn btn-up" onclick="changeDir('UP')">▲</div>
-            <div class="ctrl-btn btn-left" onclick="changeDir('LEFT')">◀</div>
-            <div class="ctrl-btn btn-down" onclick="changeDir('DOWN')">▼</div>
-            <div class="ctrl-btn btn-right" onclick="changeDir('RIGHT')">▶</div>
+    <div id="game-view">
+        <div style="margin-bottom: 15px; font-weight: bold; color: var(--text);">Điểm: <span id="sc">0</span> | 🍎</div>
+        <canvas id="stage" width="300" height="300"></canvas>
+        <div class="d-pad">
+            <div style="grid-column: 2" class="ctrl" onclick="move('UP')">▲</div>
+            <div style="grid-column: 1" class="ctrl" onclick="move('LEFT')">◀</div>
+            <div style="grid-column: 2" class="ctrl" onclick="move('DOWN')">▼</div>
+            <div style="grid-column: 3" class="ctrl" onclick="move('RIGHT')">▶</div>
         </div>
     </div>
 
     <script>
-        const canvas = document.getElementById("gameCanvas");
-        const ctx = canvas.getContext("2d");
-        let box = 20, snake, food, score, d, gameLoop;
+        const cvs = document.getElementById('stage');
+        const ctx = cvs.getContext('2d');
+        let box = 20, snake, food, score, d, loop;
 
-        function showDifficulty() { 
-            document.getElementById("home-screen").classList.add("hidden"); 
-            document.getElementById("difficulty-screen").classList.remove("hidden");
+        function show(id) {
+            document.querySelectorAll('.glass-container').forEach(el => el.classList.add('hidden'));
+            document.getElementById(id).classList.remove('hidden');
+        }
+
+        function play(s) {
+            document.getElementById('difficulty').classList.add('hidden');
+            document.getElementById('game-view').style.display = 'flex';
+            score = 0; d = "RIGHT";
+            snake = [{x: 5*box, y: 5*box}];
+            food = { x: Math.floor(Math.random()*15)*box, y: Math.floor(Math.random()*15)*box };
+            loop = setInterval(draw, s);
             if (Notification.permission !== 'granted') Notification.requestPermission();
         }
 
-        function showHome() { 
-            document.querySelectorAll('div[id$="-screen"]').forEach(d => d.classList.add("hidden"));
-            document.getElementById("home-screen").classList.remove("hidden"); 
-        }
-
-        function confirmExit() { 
-            document.getElementById("home-screen").classList.add("hidden"); 
-            document.getElementById("exit-confirm").classList.remove("hidden"); 
-        }
-
-        function closeExitConfirm() { 
-            document.getElementById("exit-confirm").classList.add("hidden"); 
-            document.getElementById("home-screen").classList.remove("hidden"); 
-        }
-
-        function startGame(speed) {
-            score = 0; d = "RIGHT";
-            snake = [{x: 4 * box, y: 8 * box}];
-            spawnFood();
-            document.getElementById("difficulty-screen").classList.add("hidden");
-            document.getElementById("game-container").style.display = "flex";
-            if(gameLoop) clearInterval(gameLoop);
-            gameLoop = setInterval(draw, speed);
-        }
-
-        function spawnFood() {
-            food = { x: Math.floor(Math.random() * 16) * box, y: Math.floor(Math.random() * 16) * box };
-        }
-
-        function changeDir(newD) {
-            if(newD == "LEFT" && d != "RIGHT") d = "LEFT";
-            if(newD == "UP" && d != "DOWN") d = "UP";
-            if(newD == "RIGHT" && d != "LEFT") d = "RIGHT";
-            if(newD == "DOWN" && d != "UP") d = "DOWN";
+        function move(dir) {
+            if(dir=="LEFT" && d!="RIGHT") d="LEFT";
+            if(dir=="UP" && d!="DOWN") d="UP";
+            if(dir=="RIGHT" && d!="LEFT") d="RIGHT";
+            if(dir=="DOWN" && d!="UP") d="DOWN";
         }
 
         function draw() {
-            ctx.fillStyle = "black";
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            snake.forEach((s, i) => {
-                ctx.fillStyle = i === 0 ? "#2ecc71" : "#27ae60";
-                ctx.fillRect(s.x, s.y, box-1, box-1);
+            ctx.fillStyle = "black"; ctx.fillRect(0,0,300,300);
+            snake.forEach((p, i) => {
+                ctx.fillStyle = i==0 ? "#2ecc71" : "#27ae60";
+                ctx.fillRect(p.x, p.y, box-1, box-1);
             });
-
-            ctx.fillText("🍎", food.x + 2, food.y + 15);
+            ctx.fillText("🍎", food.x+2, food.y+15);
 
             let nX = snake[0].x, nY = snake[0].y;
-            if(d == "LEFT") nX -= box; if(d == "UP") nY -= box;
-            if(d == "RIGHT") nX += box; if(d == "DOWN") nY += box;
+            if(d=="LEFT") nX-=box; if(d=="UP") nY-=box;
+            if(d=="RIGHT") nX+=box; if(d=="DOWN") nY+=box;
 
-            // RẮN CHẠM TƯỜNG (RANH GIỚI NGOÀI) THÌ THUA
-            if(nX < 0 || nX >= canvas.width || nY < 0 || nY >= canvas.height || snake.some(s => s.x==nX && s.y==nY)) {
-                clearInterval(gameLoop);
+            // Chạm tường chết
+            if(nX<0 || nX>=300 || nY<0 || nY>=300 || snake.some(s=>s.x==nX && s.y==nY)) {
+                clearInterval(loop);
                 if ('serviceWorker' in navigator) {
-                    navigator.serviceWorker.ready.then(reg => {
-                        // TEST THỬ: Thông báo hiện ngay sau 2 giây khi thua để bạn kiểm tra ✅
-                        reg.active.postMessage({ type: 'SCHEDULE_5_DAYS', delay: 2000 });
-                    });
+                    navigator.serviceWorker.ready.then(reg => reg.active.postMessage({type:'SEND_NOTIF'}));
                 }
-                alert("GAME OVER! Bạn đã chạm ranh giới.");
-                location.reload();
-                return;
+                alert("GAME OVER!"); location.reload(); return;
             }
 
-            if(nX == food.x && nY == food.y) {
-                score++;
-                document.getElementById("score-val").innerText = "Điểm: " + score;
-                spawnFood();
+            if(nX==food.x && nY==food.y) {
+                score++; document.getElementById('sc').innerText = score;
+                food = { x: Math.floor(Math.random()*15)*box, y: Math.floor(Math.random()*15)*box };
             } else { snake.pop(); }
-            snake.unshift({x: nX, y: nY});
+            snake.unshift({x:nX, y:nY});
         }
 
         if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js'); }
