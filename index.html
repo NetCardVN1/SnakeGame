@@ -8,24 +8,31 @@
     <meta name="theme-color" content="#000000">
     <style>
         :root { --primary: #ffffff; --accent: #2ecc71; --bg: #000000; --danger: #ff4757; }
-        body { margin: 0; background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; touch-action: none; }
+        body { margin: 0; background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; }
         
-        /* Giao diện chuẩn ảnh mẫu 1000017657.png */
+        /* Giao diện chuẩn Gemini & Tí */
         #home-screen, #difficulty-screen, #history-screen, #exit-confirm { position: fixed; inset: 0; background: black; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100; }
-        .title { font-size: 50px; font-weight: bold; margin-bottom: 5px; text-align: center; }
-        .subtitle { font-size: 18px; margin-bottom: 60px; color: #bbb; }
-        .menu-item { font-size: 32px; margin: 15px 0; cursor: pointer; transition: 0.2s; color: white; background: none; border: none; font-family: inherit; outline: none; }
-        .menu-item:active { color: var(--accent); transform: scale(0.9); }
-        
-        .health-warning { font-size: 12px; color: #ffbc00; margin-top: 20px; text-align: center; padding: 0 20px; }
-        .footer { position: absolute; bottom: 30px; font-size: 14px; color: #666; width: 100%; text-align: center; }
+        .title { font-size: 45px; font-weight: bold; margin-bottom: 5px; text-align: center; }
+        .subtitle { font-size: 18px; margin-bottom: 50px; color: #bbb; }
+        .menu-item { font-size: 30px; margin: 12px 0; cursor: pointer; color: white; background: none; border: none; font-family: inherit; }
         
         /* Game Play */
-        #game-container { display: none; flex-direction: column; align-items: center; }
-        canvas { border: 2px solid #333; background: #000; border-radius: 4px; max-width: 90vw; }
-        #game-info { width: 100%; display: flex; justify-content: space-between; padding: 10px; font-size: 18px; }
+        #game-container { display: none; flex-direction: column; align-items: center; width: 100%; }
+        canvas { border: 4px solid #333; background: #000; border-radius: 8px; width: 320px; height: 320px; }
+        #game-info { width: 320px; display: flex; justify-content: space-between; padding: 10px 0; font-size: 18px; font-weight: bold; color: var(--accent); }
+        
+        /* Hệ thống nút bấm điều hướng */
+        .controls { display: grid; grid-template-columns: repeat(3, 70px); grid-template-rows: repeat(2, 70px); gap: 10px; margin-top: 20px; }
+        .ctrl-btn { width: 70px; height: 70px; background: #222; border: 2px solid #444; color: white; border-radius: 50%; font-size: 24px; display: flex; align-items: center; justify-content: center; user-select: none; -webkit-tap-highlight-color: transparent; }
+        .ctrl-btn:active { background: #444; transform: scale(0.9); }
+        .btn-up { grid-column: 2; }
+        .btn-left { grid-column: 1; grid-row: 2; }
+        .btn-down { grid-column: 2; grid-row: 2; }
+        .btn-right { grid-column: 3; grid-row: 2; }
+
         .hidden { display: none !important; }
-        .back-btn { margin-top: 40px; color: var(--danger); cursor: pointer; font-size: 18px; border: none; background: none; }
+        .health-warning { font-size: 12px; color: #ffbc00; margin-top: 20px; text-align: center; }
+        .footer { position: absolute; bottom: 20px; font-size: 12px; color: #444; }
     </style>
 </head>
 <body>
@@ -38,28 +45,22 @@
         <button class="menu-item" onclick="showHistory()">Lịch sử</button>
         <button class="menu-item" onclick="confirmExit()">Thoát</button>
         <div class="health-warning">⚠️ Chơi quá 180 phút có thể ảnh hưởng đến sức khỏe</div>
-        <div class="footer">© Game thuộc quyền của Gemini và Tí</div>
+        <div class="footer">© Gemini and Tí</div>
     </div>
 
     <div id="exit-confirm" class="hidden">
-        <div class="title" style="font-size: 24px; color: var(--danger); padding: 0 30px; text-align: center;">⚠️ Cảnh báo: Bạn có muốn thoát trò chơi không?</div>
+        <div class="title" style="font-size: 22px; color: var(--danger);">Bạn có muốn thoát không?</div>
         <button class="menu-item" onclick="processExit()">Đúng, tôi muốn</button>
-        <button class="menu-item" style="color: var(--accent);" onclick="closeExitConfirm()">Không, tôi muốn chơi nữa</button>
+        <button class="menu-item" style="color:var(--accent)" onclick="closeExitConfirm()">Không, tôi chơi tiếp</button>
     </div>
 
     <div id="difficulty-screen" class="hidden">
-        <div class="title" style="font-size: 30px;">CHỌN MỨC ĐỘ</div>
+        <div class="title" style="font-size: 28px;">CHỌN MỨC ĐỘ</div>
         <button class="menu-item" onclick="startGame(180)">Dễ</button>
         <button class="menu-item" onclick="startGame(110)">Vừa</button>
         <button class="menu-item" onclick="startGame(70)">Khó</button>
         <button class="menu-item" onclick="startGame(40)">Siêu Khó</button>
-        <button class="back-btn" onclick="showHome()">Quay lại</button>
-    </div>
-
-    <div id="history-screen" class="hidden">
-        <div class="title" style="font-size: 30px;">LỊCH SỬ</div>
-        <div id="history-content" style="font-size: 20px; line-height: 2; margin-top: 20px; text-align: center;"></div>
-        <button class="back-btn" onclick="showHome()">Quay lại</button>
+        <button class="menu-item" style="font-size:18px; color:gray" onclick="showHome()">Quay lại</button>
     </div>
 
     <div id="game-container">
@@ -67,8 +68,16 @@
             <span id="score-val">Điểm: 0</span>
             <span id="target-val">Mồi: 🍎</span>
         </div>
-        <canvas id="gameCanvas" width="340" height="340"></canvas>
-        <button onclick="pauseGame()" style="margin-top:20px; background:none; border:1px solid #555; color:white; padding:10px 20px; border-radius:20px;">Tạm dừng & Menu</button>
+        <canvas id="gameCanvas" width="320" height="320"></canvas>
+        
+        <div class="controls">
+            <div class="ctrl-btn btn-up" onclick="changeDir('UP')">▲</div>
+            <div class="ctrl-btn btn-left" onclick="changeDir('LEFT')">◀</div>
+            <div class="ctrl-btn btn-down" onclick="changeDir('DOWN')">▼</div>
+            <div class="ctrl-btn btn-right" onclick="changeDir('RIGHT')">▶</div>
+        </div>
+        
+        <button onclick="pauseGame()" style="margin-top:15px; background:none; border:1px solid #444; color:#888; padding:8px 15px; border-radius:15px;">Tạm dừng</button>
     </div>
 
     <script>
@@ -97,74 +106,54 @@
             document.getElementById("home-screen").classList.remove("hidden"); 
         }
 
-        function processExit() { 
-            document.body.innerHTML = "<h2 style='text-align:center;margin-top:50%'>Cảm ơn bạn đã chơi!</h2>"; 
-            setTimeout(() => window.close(), 1000); 
-        }
-
-        function showHistory() {
-            const hist = JSON.parse(localStorage.getItem("snakeHist") || "[]");
-            document.getElementById("history-content").innerHTML = hist.length ? 
-                hist.map((s, i) => `Trận ${i+1}: <b>${s} điểm</b>`).join("<br>") : "Chưa có dữ liệu";
-            document.getElementById("home-screen").classList.add("hidden");
-            document.getElementById("history-screen").classList.remove("hidden");
-        }
+        function processExit() { window.close(); document.body.innerHTML = "Chào tạm biệt!"; }
 
         function startGame(speed) {
             currentSpeed = speed; score = 0; d = "RIGHT";
-            snake = [{x: 8 * box, y: 8 * box}];
+            snake = [{x: 4 * box, y: 8 * box}];
             spawnFood();
             document.getElementById("difficulty-screen").classList.add("hidden");
             document.getElementById("game-container").style.display = "flex";
             if(gameLoop) clearInterval(gameLoop);
             isPaused = false;
             gameLoop = setInterval(draw, currentSpeed);
-            document.getElementById("resume-btn").classList.add("hidden");
-            localStorage.setItem('lastPlayTime', Date.now()); 
+            localStorage.setItem('lastPlayTime', Date.now());
         }
 
         function spawnFood() {
-            food = { x: Math.floor(Math.random() * 17) * box, y: Math.floor(Math.random() * 17) * box };
+            food = { x: Math.floor(Math.random() * 16) * box, y: Math.floor(Math.random() * 16) * box };
         }
 
-        function pauseGame() { 
-            isPaused = true; 
-            document.getElementById("game-container").style.display = "none"; 
-            document.getElementById("home-screen").classList.remove("hidden"); 
-            document.getElementById("resume-btn").classList.remove("hidden"); 
+        // Điều khiển bằng nút bấm
+        function changeDir(newD) {
+            if(newD == "LEFT" && d != "RIGHT") d = "LEFT";
+            if(newD == "UP" && d != "DOWN") d = "UP";
+            if(newD == "RIGHT" && d != "LEFT") d = "RIGHT";
+            if(newD == "DOWN" && d != "UP") d = "DOWN";
         }
-
-        function resumeGame() { 
-            isPaused = false; 
-            document.getElementById("home-screen").classList.add("hidden"); 
-            document.getElementById("game-container").style.display = "flex"; 
-        }
-
-        let tX = 0, tY = 0;
-        document.addEventListener('touchstart', e => { tX = e.touches[0].clientX; tY = e.touches[0].clientY; }, {passive: false});
-        document.addEventListener('touchend', e => {
-            let dx = e.changedTouches[0].clientX - tX, dy = e.changedTouches[0].clientY - tY;
-            if (Math.abs(dx) > Math.abs(dy)) {
-                if (dx > 30 && d != "LEFT") d = "RIGHT"; else if (dx < -30 && d != "RIGHT") d = "LEFT";
-            } else {
-                if (dy > 30 && d != "UP") d = "DOWN"; else if (dy < -30 && d != "DOWN") d = "UP";
-            }
-        });
 
         function draw() {
             if(isPaused) return;
-            ctx.fillStyle = "black"; ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = "black";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Vẽ rắn
             snake.forEach((seg, i) => {
                 ctx.fillStyle = (i === 0) ? "#2ecc71" : "#27ae60";
                 ctx.fillRect(seg.x, seg.y, box-1, box-1);
             });
+
+            // Vẽ mồi
             ctx.font = "16px Arial";
             ctx.fillText(score >= 20 ? "🍌" : "🍎", food.x + 2, food.y + 16);
 
             let nX = snake[0].x, nY = snake[0].y;
-            if(d == "LEFT") nX -= box; if(d == "UP") nY -= box;
-            if(d == "RIGHT") nX += box; if(d == "DOWN") nY += box;
+            if(d == "LEFT") nX -= box;
+            if(d == "UP") nY -= box;
+            if(d == "RIGHT") nX += box;
+            if(d == "DOWN") nY += box;
 
+            // KIỂM TRA CHẠM TƯỜNG (RANH GIỚI NGOÀI) HOẶC CẮN ĐUÔI
             if(nX < 0 || nX >= canvas.width || nY < 0 || nY >= canvas.height || snake.some(s => s.x==nX && s.y==nY)) {
                 gameOver(); return;
             }
@@ -180,34 +169,33 @@
 
         function gameOver() {
             clearInterval(gameLoop);
-            saveScore(score);
-            scheduleAutoNotification(); 
-            alert("GAME OVER!\nĐiểm của bạn: " + score);
+            scheduleAutoNotification();
+            alert("GAME OVER! Bạn đã chạm ranh giới.\nĐiểm: " + score);
             location.reload();
         }
 
-        function saveScore(s) {
-            let hist = JSON.parse(localStorage.getItem("snakeHist") || "[]");
-            hist.unshift(s);
-            localStorage.setItem("snakeHist", JSON.stringify(hist.slice(0, 5)));
+        function pauseGame() { 
+            isPaused = true; 
+            document.getElementById("game-container").style.display = "none"; 
+            document.getElementById("home-screen").classList.remove("hidden"); 
+            document.getElementById("resume-btn").classList.remove("hidden"); 
         }
 
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js');
+        function resumeGame() { 
+            isPaused = false; 
+            document.getElementById("home-screen").classList.add("hidden"); 
+            document.getElementById("game-container").style.display = "flex"; 
         }
 
         function scheduleAutoNotification() {
             if ('serviceWorker' in navigator && Notification.permission === 'granted') {
                 navigator.serviceWorker.ready.then(reg => {
-                    const FIVE_DAYS = 5 * 24 * 60 * 60 * 1000;
-                    reg.active.postMessage({
-                        type: 'SCHEDULE_5_DAYS',
-                        delay: FIVE_DAYS
-                    });
+                    reg.active.postMessage({ type: 'SCHEDULE_5_DAYS', delay: 5 * 24 * 60 * 60 * 1000 });
                 });
             }
         }
+
+        if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js'); }
     </script>
 </body>
 </html>
-
