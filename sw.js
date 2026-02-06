@@ -1,4 +1,4 @@
-const CACHE = 'snake-v-final';
+const CACHE = 'snake-v-final-no-unicode';
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(['index.html', 'manifest.json', 'audio.mp3', 'avatar.png'])));
@@ -13,16 +13,21 @@ self.addEventListener('message', event => {
     if (self.notifTimeout) clearTimeout(self.notifTimeout);
     
     self.notifTimeout = setTimeout(() => {
-      self.registration.showNotification('😎 Tới giờ thể hiện trình độ của mình rồi!', {
-        body: 'Hãy thể hiện phản xạ của mình đi nào!',
+      // Viết trực tiếp emoji theo yêu cầu của bạn
+      const title = '😎 Tới giờ thể hiện trình độ của mình rồi!';
+      const bodyText = 'Hãy thể hiện phản xạ của mình đi nào!';
+
+      self.registration.showNotification(title, {
+        body: bodyText,
         icon: 'avatar.png',
         badge: 'avatar.png',
         vibrate: [500, 110, 500, 110, 450],
-        tag: 'snake-auto-remind',
+        tag: 'snake-notif-final',
         renotify: true,
         data: { url: '/' }
       });
-      // Phát âm thanh bạn đã cung cấp
+
+      // Phát âm thanh audio.mp3 (1).mp3]
       const audio = new Audio('audio.mp3');
       audio.play().catch(() => {});
     }, event.data.delay);
@@ -33,4 +38,3 @@ self.addEventListener('notificationclick', e => {
   e.notification.close();
   e.waitUntil(clients.openWindow('/'));
 });
-
