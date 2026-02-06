@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Snake Game</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#000000">
+    <style>
+        :root { --primary: #ffffff; --accent: #2ecc71; --bg: #000000; --danger: #ff4757; }
+        body { margin: 0; background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; touch-action: none; }
+        
+        /* Giao diện chuẩn ảnh mẫu 1000017657.png */
+        #home-screen, #difficulty-screen, #history-screen, #exit-confirm { position: fixed; inset: 0; background: black; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100; }
+        .title { font-size: 50px; font-weight: bold; margin-bottom: 5px; text-align: center; }
+        .subtitle { font-size: 18px; margin-bottom: 60px; color: #bbb; }
+        .menu-item { font-size: 32px; margin: 15px 0; cursor: pointer; transition: 0.2s; color: white; background: none; border: none; font-family: inherit; outline: none; }
+        .menu-item:active { color: var(--accent); transform: scale(0.9); }
+        
+        .health-warning { font-size: 12px; color: #ffbc00; margin-top: 20px; text-align: center; padding: 0 20px; }
+        .footer { position: absolute; bottom: 30px; font-size: 14px; color: #666; width: 100%; text-align: center; }
+        
+        /* Game Play */
+        #game-container { display: none; flex-direction: column; align-items: center; }
+        canvas { border: 2px solid #333; background: #000; border-radius: 4px; max-width: 90vw; }
+        #game-info { width: 100%; display: flex; justify-content: space-between; padding: 10px; font-size: 18px; }
+        .hidden { display: none !important; }
+        .back-btn { margin-top: 40px; color: var(--danger); cursor: pointer; font-size: 18px; border: none; background: none; }
+    </style>
+</head>
+<body>
+
+    <div id="home-screen">
+        <div class="title">Snake Game</div>
+        <div class="subtitle">Made by Gemini and Tí</div>
+        <button class="menu-item" onclick="showDifficulty()">Chơi</button>
+        <button class="menu-item hidden" id="resume-btn" onclick="resumeGame()">Tiếp tục</button>
+        <button class="menu-item" onclick="showHistory()">Lịch sử</button>
+        <button class="menu-item" onclick="confirmExit()">Thoát</button>
+        <div class="health-warning">⚠️ Chơi quá 180 phút có thể ảnh hưởng đến sức khỏe</div>
+        <div class="footer">© Game thuộc quyền của Gemini và Tí</div>
+    </div>
+
+    <div id="exit-confirm" class="hidden">
+        <div class="title" style="font-size: 24px; color: var(--danger); padding: 0 30px; text-align: center;">⚠️ Cảnh báo: Bạn có muốn thoát trò chơi không?</div>
+        <button class="menu-item" onclick="processExit()">Đúng, tôi muốn</button>
+        <button class="menu-item" style="color: var(--accent);" onclick="closeExitConfirm()">Không, tôi muốn chơi nữa</button>
+    </div>
+
+    <div id="difficulty-screen" class="hidden">
+        <div class="title" style="font-size: 30px;">CHỌN MỨC ĐỘ</div>
+        <button class="menu-item" onclick="startGame(180)">Dễ</button>
+        <button class="menu-item" onclick="startGame(110)">Vừa</button>
+        <button class="menu-item" onclick="startGame(70)">Khó</button>
+        <button class="menu-item" onclick="startGame(40)">Siêu Khó</button>
+        <button class="back-btn" onclick="showHome()">Quay lại</button>
+    </div>
+
+    <div id="history-screen" class="hidden">
+        <div class="title" style="font-size: 30px;">LỊCH SỬ</div>
+        <div id="history-content" style="font-size: 20px; line-height: 2; margin-top: 20px; text-align: center;"></div>
+        <button class="back-btn" onclick="showHome()">Quay lại</button>
+    </div>
+
+    <div id="game-container">
+        <div id="game-info">
+            <span id="score-val">Điểm: 0</span>
+            <span id="target-val">Mồi: 🍎</span>
+        </div>
+        <canvas id="gameCanvas" width="340" height="340"></canvas>
+        <button onclick="pauseGame()" style="margin-top:20px; background:none; border:1px solid #555; color:white; padding:10px 20px; border-radius:20px;">Tạm dừng & Menu</button>
+    </div>
+
+    <script>
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+        let box = 20, snake, food, score, d, gameLoop, currentSpeed, isPaused = false;
+
+        function showDifficulty() { 
+            document.getElementById("home-screen").classList.add("hidden"); 
+            document.getElementById("difficulty-screen").classList.remove("hidden");
+            if ("Notification" in window) Notification.requestPermission();
+        }
+
+        function showHome() { 
+            document.querySelectorAll('div[id$="-screen"]').forEach(d => d.classList.add("hidden"));
+            document.getElementById("home-screen").classList.remove("hidden"); 
+        }
+
+        function confirmExit() { 
+            document.getElementById("home-screen").classList.add("hidden"); 
+            document.getElementById("exit-confirm").classList.remove("hidden"); 
+        }
+
+        function closeExitConfirm() { 
+            document.getElementById("exit-confirm").classList.add("hidden"); 
+            document.getElementById("home-screen").classList.remove("hidden"); 
+        }
+
+        function processExit() { 
+            document.body.innerHTML = "<h2 style='text-align:center;margin-top:50%'>Cảm ơn bạn đã chơi!</h2>"; 
+            setTimeout(() => window.close(), 1000); 
+        }
+
+        function showHistory() {
+            const hist = JSON.parse(localStorage.getItem("snakeHist") || "[]");
+            document.getElementById("history-content").innerHTML = hist.length ? 
+                hist.map((s, i) => `Trận ${i+1}: <b>${s} điểm</b>`).join("<br>") : "Chưa có dữ liệu";
+            document.getElementById("home-screen").classList.add("hidden");
+            document.getElementById("history-screen").classList.remove("hidden");
+        }
+
+        function startGame(speed) {
+            currentSpeed = speed; score = 0; d = "RIGHT";
+            snake = [{x: 8 * box, y: 8 * box}];
+            spawnFood();
+            document.getElementById("difficulty-screen").classList.add("hidden");
+            document.getElementById("game-container").style.display = "flex";
+            if(gameLoop) clearInterval(gameLoop);
+            isPaused = false;
+            gameLoop = setInterval(draw, currentSpeed);
+            document.getElementById("resume-btn").classList.add("hidden");
+            localStorage.setItem('lastPlayTime', Date.now()); 
+        }
+
+        function spawnFood() {
+            food = { x: Math.floor(Math.random() * 17) * box, y: Math.floor(Math.random() * 17) * box };
+        }
+
+        function pauseGame() { 
+            isPaused = true; 
+            document.getElementById("game-container").style.display = "none"; 
+            document.getElementById("home-screen").classList.remove("hidden"); 
+            document.getElementById("resume-btn").classList.remove("hidden"); 
+        }
+
+        function resumeGame() { 
+            isPaused = false; 
+            document.getElementById("home-screen").classList.add("hidden"); 
+            document.getElementById("game-container").style.display = "flex"; 
+        }
+
+        let tX = 0, tY = 0;
+        document.addEventListener('touchstart', e => { tX = e.touches[0].clientX; tY = e.touches[0].clientY; }, {passive: false});
+        document.addEventListener('touchend', e => {
+            let dx = e.changedTouches[0].clientX - tX, dy = e.changedTouches[0].clientY - tY;
+            if (Math.abs(dx) > Math.abs(dy)) {
+                if (dx > 30 && d != "LEFT") d = "RIGHT"; else if (dx < -30 && d != "RIGHT") d = "LEFT";
+            } else {
+                if (dy > 30 && d != "UP") d = "DOWN"; else if (dy < -30 && d != "DOWN") d = "UP";
+            }
+        });
+
+        function draw() {
+            if(isPaused) return;
+            ctx.fillStyle = "black"; ctx.fillRect(0, 0, canvas.width, canvas.height);
+            snake.forEach((seg, i) => {
+                ctx.fillStyle = (i === 0) ? "#2ecc71" : "#27ae60";
+                ctx.fillRect(seg.x, seg.y, box-1, box-1);
+            });
+            ctx.font = "16px Arial";
+            ctx.fillText(score >= 20 ? "🍌" : "🍎", food.x + 2, food.y + 16);
+
+            let nX = snake[0].x, nY = snake[0].y;
+            if(d == "LEFT") nX -= box; if(d == "UP") nY -= box;
+            if(d == "RIGHT") nX += box; if(d == "DOWN") nY += box;
+
+            if(nX < 0 || nX >= canvas.width || nY < 0 || nY >= canvas.height || snake.some(s => s.x==nX && s.y==nY)) {
+                gameOver(); return;
+            }
+
+            if(nX == food.x && nY == food.y) {
+                score += (score >= 20) ? 2 : 1;
+                document.getElementById("score-val").innerText = "Điểm: " + score;
+                document.getElementById("target-val").innerText = score >= 20 ? "Mồi: 🍌" : "Mồi: 🍎";
+                spawnFood();
+            } else { snake.pop(); }
+            snake.unshift({x: nX, y: nY});
+        }
+
+        function gameOver() {
+            clearInterval(gameLoop);
+            saveScore(score);
+            scheduleAutoNotification(); 
+            alert("GAME OVER!\nĐiểm của bạn: " + score);
+            location.reload();
+        }
+
+        function saveScore(s) {
+            let hist = JSON.parse(localStorage.getItem("snakeHist") || "[]");
+            hist.unshift(s);
+            localStorage.setItem("snakeHist", JSON.stringify(hist.slice(0, 5)));
+        }
+
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js');
+        }
+
+        function scheduleAutoNotification() {
+            if ('serviceWorker' in navigator && Notification.permission === 'granted') {
+                navigator.serviceWorker.ready.then(reg => {
+                    const FIVE_DAYS = 5 * 24 * 60 * 60 * 1000;
+                    reg.active.postMessage({
+                        type: 'SCHEDULE_5_DAYS',
+                        delay: FIVE_DAYS
+                    });
+                });
+            }
+        }
+    </script>
+</body>
+</html>
+
