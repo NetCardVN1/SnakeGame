@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+        <!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
@@ -7,32 +7,31 @@
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#000000">
     <style>
-        :root { --primary: #ffffff; --accent: #2ecc71; --bg: #000000; --danger: #ff4757; }
+        :root { --accent: #2ecc71; --bg: #000000; --danger: #ff4757; }
         body { margin: 0; background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; }
         
-        /* Giao diện chuẩn Gemini & Tí */
-        #home-screen, #difficulty-screen, #history-screen, #exit-confirm { position: fixed; inset: 0; background: black; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100; }
-        .title { font-size: 45px; font-weight: bold; margin-bottom: 5px; text-align: center; }
-        .subtitle { font-size: 18px; margin-bottom: 50px; color: #bbb; }
-        .menu-item { font-size: 30px; margin: 12px 0; cursor: pointer; color: white; background: none; border: none; font-family: inherit; }
+        /* Giao diện chuẩn ảnh mẫu 1000017657.png */
+        #home-screen, #difficulty-screen, #exit-confirm { position: fixed; inset: 0; background: black; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100; }
+        .title { font-size: 45px; font-weight: bold; margin-bottom: 5px; }
+        .subtitle { font-size: 18px; margin-bottom: 60px; color: #bbb; }
+        .menu-item { font-size: 32px; margin: 15px 0; cursor: pointer; color: white; background: none; border: none; font-family: inherit; outline: none; }
         
         /* Game Play */
-        #game-container { display: none; flex-direction: column; align-items: center; width: 100%; }
-        canvas { border: 4px solid #333; background: #000; border-radius: 8px; width: 320px; height: 320px; }
-        #game-info { width: 320px; display: flex; justify-content: space-between; padding: 10px 0; font-size: 18px; font-weight: bold; color: var(--accent); }
+        #game-container { display: none; flex-direction: column; align-items: center; }
+        canvas { border: 4px solid #333; background: #000; border-radius: 8px; }
+        #game-info { width: 320px; display: flex; justify-content: space-between; padding: 10px 0; font-size: 18px; color: var(--accent); font-weight: bold; }
         
-        /* Hệ thống nút bấm điều hướng */
-        .controls { display: grid; grid-template-columns: repeat(3, 70px); grid-template-rows: repeat(2, 70px); gap: 10px; margin-top: 20px; }
-        .ctrl-btn { width: 70px; height: 70px; background: #222; border: 2px solid #444; color: white; border-radius: 50%; font-size: 24px; display: flex; align-items: center; justify-content: center; user-select: none; -webkit-tap-highlight-color: transparent; }
-        .ctrl-btn:active { background: #444; transform: scale(0.9); }
+        /* Nút bấm điều hướng */
+        .controls { display: grid; grid-template-columns: repeat(3, 80px); gap: 15px; margin-top: 30px; }
+        .ctrl-btn { width: 80px; height: 80px; background: #1a1a1a; border: 1px solid #333; color: white; border-radius: 20px; font-size: 32px; display: flex; align-items: center; justify-content: center; user-select: none; -webkit-tap-highlight-color: transparent; }
+        .ctrl-btn:active { background: #333; transform: scale(0.9); }
         .btn-up { grid-column: 2; }
-        .btn-left { grid-column: 1; grid-row: 2; }
-        .btn-down { grid-column: 2; grid-row: 2; }
-        .btn-right { grid-column: 3; grid-row: 2; }
+        .btn-left { grid-column: 1; }
+        .btn-down { grid-column: 2; }
+        .btn-right { grid-column: 3; }
 
+        .footer { position: absolute; bottom: 30px; font-size: 14px; color: #666; width: 100%; text-align: center; }
         .hidden { display: none !important; }
-        .health-warning { font-size: 12px; color: #ffbc00; margin-top: 20px; text-align: center; }
-        .footer { position: absolute; bottom: 20px; font-size: 12px; color: #444; }
     </style>
 </head>
 <body>
@@ -41,54 +40,46 @@
         <div class="title">Snake Game</div>
         <div class="subtitle">Made by Gemini and Tí</div>
         <button class="menu-item" onclick="showDifficulty()">Chơi</button>
-        <button class="menu-item hidden" id="resume-btn" onclick="resumeGame()">Tiếp tục</button>
-        <button class="menu-item" onclick="showHistory()">Lịch sử</button>
         <button class="menu-item" onclick="confirmExit()">Thoát</button>
-        <div class="health-warning">⚠️ Chơi quá 180 phút có thể ảnh hưởng đến sức khỏe</div>
-        <div class="footer">© Gemini and Tí</div>
+        <div class="footer">© Game thuộc quyền của Gemini và Tí</div>
     </div>
 
     <div id="exit-confirm" class="hidden">
-        <div class="title" style="font-size: 22px; color: var(--danger);">Bạn có muốn thoát không?</div>
-        <button class="menu-item" onclick="processExit()">Đúng, tôi muốn</button>
-        <button class="menu-item" style="color:var(--accent)" onclick="closeExitConfirm()">Không, tôi chơi tiếp</button>
+        <div class="title" style="font-size: 24px; color: var(--danger); text-align: center; padding: 0 20px;">Bạn có muốn thoát không?</div>
+        <button class="menu-item" onclick="window.close()">Đúng, thoát</button>
+        <button class="menu-item" style="color:var(--accent)" onclick="closeExitConfirm()">Không, chơi tiếp</button>
     </div>
 
     <div id="difficulty-screen" class="hidden">
-        <div class="title" style="font-size: 28px;">CHỌN MỨC ĐỘ</div>
-        <button class="menu-item" onclick="startGame(180)">Dễ</button>
-        <button class="menu-item" onclick="startGame(110)">Vừa</button>
+        <div class="title" style="font-size: 28px;">MỨC ĐỘ</div>
+        <button class="menu-item" onclick="startGame(160)">Dễ</button>
         <button class="menu-item" onclick="startGame(70)">Khó</button>
-        <button class="menu-item" onclick="startGame(40)">Siêu Khó</button>
-        <button class="menu-item" style="font-size:18px; color:gray" onclick="showHome()">Quay lại</button>
+        <button class="menu-item" style="color:gray; font-size: 18px" onclick="showHome()">Quay lại</button>
     </div>
 
     <div id="game-container">
         <div id="game-info">
             <span id="score-val">Điểm: 0</span>
-            <span id="target-val">Mồi: 🍎</span>
+            <span>Mồi: 🍎</span>
         </div>
         <canvas id="gameCanvas" width="320" height="320"></canvas>
-        
         <div class="controls">
             <div class="ctrl-btn btn-up" onclick="changeDir('UP')">▲</div>
             <div class="ctrl-btn btn-left" onclick="changeDir('LEFT')">◀</div>
             <div class="ctrl-btn btn-down" onclick="changeDir('DOWN')">▼</div>
             <div class="ctrl-btn btn-right" onclick="changeDir('RIGHT')">▶</div>
         </div>
-        
-        <button onclick="pauseGame()" style="margin-top:15px; background:none; border:1px solid #444; color:#888; padding:8px 15px; border-radius:15px;">Tạm dừng</button>
     </div>
 
     <script>
         const canvas = document.getElementById("gameCanvas");
         const ctx = canvas.getContext("2d");
-        let box = 20, snake, food, score, d, gameLoop, currentSpeed, isPaused = false;
+        let box = 20, snake, food, score, d, gameLoop;
 
         function showDifficulty() { 
             document.getElementById("home-screen").classList.add("hidden"); 
             document.getElementById("difficulty-screen").classList.remove("hidden");
-            if ("Notification" in window) Notification.requestPermission();
+            if (Notification.permission !== 'granted') Notification.requestPermission();
         }
 
         function showHome() { 
@@ -106,25 +97,20 @@
             document.getElementById("home-screen").classList.remove("hidden"); 
         }
 
-        function processExit() { window.close(); document.body.innerHTML = "Chào tạm biệt!"; }
-
         function startGame(speed) {
-            currentSpeed = speed; score = 0; d = "RIGHT";
+            score = 0; d = "RIGHT";
             snake = [{x: 4 * box, y: 8 * box}];
             spawnFood();
             document.getElementById("difficulty-screen").classList.add("hidden");
             document.getElementById("game-container").style.display = "flex";
             if(gameLoop) clearInterval(gameLoop);
-            isPaused = false;
-            gameLoop = setInterval(draw, currentSpeed);
-            localStorage.setItem('lastPlayTime', Date.now());
+            gameLoop = setInterval(draw, speed);
         }
 
         function spawnFood() {
             food = { x: Math.floor(Math.random() * 16) * box, y: Math.floor(Math.random() * 16) * box };
         }
 
-        // Điều khiển bằng nút bấm
         function changeDir(newD) {
             if(newD == "LEFT" && d != "RIGHT") d = "LEFT";
             if(newD == "UP" && d != "DOWN") d = "UP";
@@ -133,66 +119,40 @@
         }
 
         function draw() {
-            if(isPaused) return;
             ctx.fillStyle = "black";
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // Vẽ rắn
-            snake.forEach((seg, i) => {
-                ctx.fillStyle = (i === 0) ? "#2ecc71" : "#27ae60";
-                ctx.fillRect(seg.x, seg.y, box-1, box-1);
+            snake.forEach((s, i) => {
+                ctx.fillStyle = i === 0 ? "#2ecc71" : "#27ae60";
+                ctx.fillRect(s.x, s.y, box-1, box-1);
             });
 
-            // Vẽ mồi
-            ctx.font = "16px Arial";
-            ctx.fillText(score >= 20 ? "🍌" : "🍎", food.x + 2, food.y + 16);
+            ctx.fillText("🍎", food.x + 2, food.y + 15);
 
             let nX = snake[0].x, nY = snake[0].y;
-            if(d == "LEFT") nX -= box;
-            if(d == "UP") nY -= box;
-            if(d == "RIGHT") nX += box;
-            if(d == "DOWN") nY += box;
+            if(d == "LEFT") nX -= box; if(d == "UP") nY -= box;
+            if(d == "RIGHT") nX += box; if(d == "DOWN") nY += box;
 
-            // KIỂM TRA CHẠM TƯỜNG (RANH GIỚI NGOÀI) HOẶC CẮN ĐUÔI
+            // RẮN CHẠM TƯỜNG (RANH GIỚI NGOÀI) THÌ THUA
             if(nX < 0 || nX >= canvas.width || nY < 0 || nY >= canvas.height || snake.some(s => s.x==nX && s.y==nY)) {
-                gameOver(); return;
+                clearInterval(gameLoop);
+                if ('serviceWorker' in navigator) {
+                    navigator.serviceWorker.ready.then(reg => {
+                        // TEST THỬ: Thông báo hiện ngay sau 2 giây khi thua để bạn kiểm tra ✅
+                        reg.active.postMessage({ type: 'SCHEDULE_5_DAYS', delay: 2000 });
+                    });
+                }
+                alert("GAME OVER! Bạn đã chạm ranh giới.");
+                location.reload();
+                return;
             }
 
             if(nX == food.x && nY == food.y) {
-                score += (score >= 20) ? 2 : 1;
+                score++;
                 document.getElementById("score-val").innerText = "Điểm: " + score;
-                document.getElementById("target-val").innerText = score >= 20 ? "Mồi: 🍌" : "Mồi: 🍎";
                 spawnFood();
             } else { snake.pop(); }
             snake.unshift({x: nX, y: nY});
-        }
-
-        function gameOver() {
-            clearInterval(gameLoop);
-            scheduleAutoNotification();
-            alert("GAME OVER! Bạn đã chạm ranh giới.\nĐiểm: " + score);
-            location.reload();
-        }
-
-        function pauseGame() { 
-            isPaused = true; 
-            document.getElementById("game-container").style.display = "none"; 
-            document.getElementById("home-screen").classList.remove("hidden"); 
-            document.getElementById("resume-btn").classList.remove("hidden"); 
-        }
-
-        function resumeGame() { 
-            isPaused = false; 
-            document.getElementById("home-screen").classList.add("hidden"); 
-            document.getElementById("game-container").style.display = "flex"; 
-        }
-
-        function scheduleAutoNotification() {
-            if ('serviceWorker' in navigator && Notification.permission === 'granted') {
-                navigator.serviceWorker.ready.then(reg => {
-                    reg.active.postMessage({ type: 'SCHEDULE_5_DAYS', delay: 5 * 24 * 60 * 60 * 1000 });
-                });
-            }
         }
 
         if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js'); }
