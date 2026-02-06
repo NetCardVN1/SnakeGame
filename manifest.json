@@ -1,6 +1,6 @@
 {
-  "name": "Snake Gemini Tí",
-  "short_name": "SnakePro",
+  "name": "SnakePro",
+  "short_name": "SnakePro VN",
   "start_url": "index.html",
   "display": "standalone",
   "background_color": "#000000",
@@ -15,4 +15,3 @@
     }
   ]
 }
-
